@@ -1,6 +1,7 @@
 // API Configuration
 export const BASE_API_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000/api/v1";
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "https://72l67dh1-5000.inc1.devtunnels.ms/api/v1";
 
 // API Endpoints
 export const API_ENDPOINTS = {

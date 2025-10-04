@@ -61,7 +61,7 @@ export const appConfig = {
 
   // API endpoints
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "/api",
     endpoints: {
       login: "/auth/login",
       logout: "/auth/logout",

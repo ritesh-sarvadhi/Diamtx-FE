@@ -106,9 +106,7 @@ export default function SettingContent({ master }: SettingContentProps) {
       const code = item.code?.toLowerCase() || "";
       const keyword = (item.likeKeyword || "").toLowerCase();
       return (
-        name.includes(term) ||
-        code.includes(term) ||
-        keyword.includes(term)
+        name.includes(term) || code.includes(term) || keyword.includes(term)
       );
     });
   }, [subMasters, searchTerm]);
@@ -130,41 +128,46 @@ export default function SettingContent({ master }: SettingContentProps) {
       }));
   }, [filteredData, currentPage, pageSize]);
 
-  const handleStatusChange = useCallback(async (
-    record: SubMasterRow,
-    field: "isActive" | "isWebDisplay" | "isDefault",
-    value: boolean
-  ) => {
-    if (!record.id) {
-      return;
-    }
+  const handleStatusChange = useCallback(
+    async (
+      record: SubMasterRow,
+      field: "isActive" | "isWebDisplay" | "isDefault",
+      value: boolean
+    ) => {
+      if (!record.id) {
+        return;
+      }
 
-    const updateKey = `${record.id}-${field}`;
-    setUpdatingFieldKey(updateKey);
+      const updateKey = `${record.id}-${field}`;
+      setUpdatingFieldKey(updateKey);
 
-    try {
-      const payload = {
-        isActive: field === "isActive" ? value : Boolean(record.isActive),
-        isWebDisplay:
-          field === "isWebDisplay" ? value : Boolean(record.isWebDisplay),
-        isDefault: field === "isDefault" ? value : Boolean(record.isDefault),
-      } as const;
+      try {
+        const payload = {
+          isActive: field === "isActive" ? value : Boolean(record.isActive),
+          isWebDisplay:
+            field === "isWebDisplay" ? value : Boolean(record.isWebDisplay),
+          isDefault: field === "isDefault" ? value : Boolean(record.isDefault),
+        } as const;
 
-      const response = await apiUpdateMasterStatus(record.id, payload);
-      const updated = response.data.data;
+        const response = await apiUpdateMasterStatus(record.id, payload);
+        const updated = response.data.data;
 
-      setSubMasters((prev) =>
-        prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
-      );
+        setSubMasters((prev) =>
+          prev.map((item) =>
+            item.id === updated.id ? { ...item, ...updated } : item
+          )
+        );
 
-      message.success("Status updated successfully");
-    } catch (err) {
-      console.error("Failed to update master status", err);
-      message.error("Failed to update status");
-    } finally {
-      setUpdatingFieldKey(null);
-    }
-  }, [setSubMasters, setUpdatingFieldKey]);
+        message.success("Status updated successfully");
+      } catch (err) {
+        console.error("Failed to update master status", err);
+        message.error("Failed to update status");
+      } finally {
+        setUpdatingFieldKey(null);
+      }
+    },
+    [setSubMasters, setUpdatingFieldKey]
+  );
 
   const isUpdating = useCallback(
     (recordId: string, field: "isActive" | "isWebDisplay" | "isDefault") =>
@@ -200,7 +203,11 @@ export default function SettingContent({ master }: SettingContentProps) {
             alt={record.name || "sub master"}
             width={40}
             height={40}
-            style={{ objectFit: "cover", borderRadius: 8, backgroundColor: "#f5f5f5" }}
+            style={{
+              objectFit: "cover",
+              borderRadius: 8,
+              backgroundColor: "#f5f5f5",
+            }}
             fallback={PLACEHOLDER_IMAGE}
             preview={false}
           />
@@ -306,9 +313,11 @@ export default function SettingContent({ master }: SettingContentProps) {
     ? Math.min(pageStart + pageSize - 1, totalItems)
     : 0;
 
-  const emptyState = master
-    ? <Empty description="No sub masters found" />
-    : <Empty description="Select a master to view sub masters" />;
+  const emptyState = master ? (
+    <Empty description="No sub masters found" />
+  ) : (
+    <Empty description="Select a master to view sub masters" />
+  );
 
   return (
     <Card
@@ -318,7 +327,7 @@ export default function SettingContent({ master }: SettingContentProps) {
         boxShadow: token.boxShadow,
         border: `1px solid ${token.colorBorder}`,
       }}
-      bodyStyle={{ padding: 0, height: "100%" }}
+      bodyStyle={{ padding: 0, height: "100%", overflow: "hidden" }}
     >
       <div
         style={{
@@ -356,10 +365,18 @@ export default function SettingContent({ master }: SettingContentProps) {
         </div>
       </div>
 
-      <div style={{ flex: 1, overflow: "auto", padding: "0 24px" }}>
+      <div
+        style={{ flex: 1, overflow: "auto", padding: "0 24px", height: "100%" }}
+      >
         {error && (
           <div style={{ margin: "16px 0" }}>
-            <Alert type="error" message={error} showIcon closable onClose={() => setError(null)} />
+            <Alert
+              type="error"
+              message={error}
+              showIcon
+              closable
+              onClose={() => setError(null)}
+            />
           </div>
         )}
         <Table

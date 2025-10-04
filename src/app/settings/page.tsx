@@ -15,7 +15,9 @@ import { MasterRecord } from "@/services/ProjectService";
 const { Content } = Layout;
 
 export default function SettingsPage() {
-  const [selectedMaster, setSelectedMaster] = useState<MasterRecord | null>(null);
+  const [selectedMaster, setSelectedMaster] = useState<MasterRecord | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState("master");
   const { token } = theme.useToken();
   const searchParams = useSearchParams();
@@ -23,14 +25,14 @@ export default function SettingsPage() {
 
   // Get the active tab from URL search params
   useEffect(() => {
-    const tab = searchParams.get('tab') || 'master';
+    const tab = searchParams.get("tab") || "master";
     setActiveTab(tab);
   }, [searchParams]);
 
   // If no tab is specified, redirect to master tab
   useEffect(() => {
-    if (!searchParams.get('tab')) {
-      router.replace('/settings?tab=master');
+    if (!searchParams.get("tab")) {
+      router.replace("/settings?tab=master");
     }
   }, [searchParams, router]);
 
@@ -38,17 +40,17 @@ export default function SettingsPage() {
     switch (activeTab) {
       case "master":
         return (
-          <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
+          <Row gutter={16} style={{ height: "calc(100vh - 176px)" }}>
             {/* Left Child Sidebar */}
-            <Col span={6}>
-              <SettingSidebar 
+            <Col span={6} className="h-full overflow-auto">
+              <SettingSidebar
                 selectedMasterId={selectedMaster?.id ?? null}
                 onSelect={setSelectedMaster}
               />
             </Col>
-            
+
             {/* Right Content Panel */}
-            <Col span={18}>
+            <Col span={18} className="h-full overflow-auto">
               <SettingContent master={selectedMaster} />
             </Col>
           </Row>
@@ -63,14 +65,14 @@ export default function SettingsPage() {
         return <PriceSettingsPage />;
       default:
         return (
-          <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
-            <Col span={6}>
-              <SettingSidebar 
+          <Row gutter={16} style={{ height: "calc(100vh - 176px)" }}>
+            <Col span={6} className="h-full overflow-auto">
+              <SettingSidebar
                 selectedMasterId={selectedMaster?.id ?? null}
                 onSelect={setSelectedMaster}
               />
             </Col>
-            <Col span={18}>
+            <Col span={18} className="h-full overflow-auto">
               <SettingContent master={selectedMaster} />
             </Col>
           </Row>
@@ -80,15 +82,18 @@ export default function SettingsPage() {
 
   return (
     <ProtectedRoute>
-      <Layout style={{ 
-        minHeight: "100vh", 
-        background: token.colorBgContainer 
-      }}>
+      <Layout
+        style={{
+          background: token.colorBgContainer,
+        }}
+      >
         {/* Main Content Area */}
-        <Content style={{ 
-          padding: "16px",
-          background: token.colorBgLayout
-        }}>
+        <Content
+          style={{
+            padding: "16px",
+            background: token.colorBgLayout,
+          }}
+        >
           {renderContent()}
         </Content>
       </Layout>

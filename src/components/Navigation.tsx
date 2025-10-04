@@ -19,7 +19,15 @@ import {
   BarChartOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
-import { Avatar, Button, Drawer, Layout, theme, Dropdown, Typography } from "antd";
+import {
+  Avatar,
+  Button,
+  Drawer,
+  Layout,
+  theme,
+  Dropdown,
+  Typography,
+} from "antd";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -209,7 +217,7 @@ const NavigationSkeleton = () => (
           marginLeft: 260,
           padding: "16px",
           background: "#f0f2f5",
-          minHeight: "calc(100vh - 64px)",
+          minHeight: "calc(100vh - 176px)",
         }}
       >
         <div
@@ -217,7 +225,7 @@ const NavigationSkeleton = () => (
             background: "white",
             borderRadius: "8px",
             padding: "24px",
-            minHeight: "calc(100vh - 112px)",
+            minHeight: "calc(100vh - 144px)",
           }}
         >
           <div
@@ -267,9 +275,7 @@ export function Navigation({ children }: NavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const {
-    token,
-  } = theme.useToken();
+  const { token } = theme.useToken();
 
   const getInitial = (value?: string | null) => {
     if (!value) return undefined;
@@ -446,7 +452,13 @@ export function Navigation({ children }: NavigationProps) {
           </Text>
           <Button
             type="text"
-            icon={collapsed && !forDrawer ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={
+              collapsed && !forDrawer ? (
+                <MenuUnfoldOutlined />
+              ) : (
+                <MenuFoldOutlined />
+              )
+            }
             onClick={() => {
               if (isMobileOrTablet) {
                 setMobileOpen(!mobileOpen);
@@ -497,9 +509,7 @@ export function Navigation({ children }: NavigationProps) {
               </Link>
             ) : (
               <div
-                className={`flex items-center h-10 px-4 rounded-lg cursor-pointer transition-colors ${
-                  "text-gray-700 hover:bg-[var(--light-primary-color)] hover:text-[var(--primary-color)]"
-                }`}
+                className={`flex items-center h-10 px-4 rounded-lg cursor-pointer transition-colors ${"text-gray-700 hover:bg-[var(--light-primary-color)] hover:text-[var(--primary-color)]"}`}
               >
                 <span
                   className={`${collapsed && !forDrawer ? "mr-0" : "mr-3"}`}
@@ -559,24 +569,26 @@ export function Navigation({ children }: NavigationProps) {
       }}
     >
       <div className="flex items-center space-x-6">
-
         {/* Sub Navigation - Dashboard, Enquiry, Search or Settings Menu */}
         <div className="flex space-x-4 ml-8">
           {getCurrentNavItems().map((item) => {
-            const isActive = (pathname === "/settings" || pathname === "/dashboard/settings") 
-              ? searchParams.get('tab') === item.key 
-              : false;
-            
+            const isActive =
+              pathname === "/settings" || pathname === "/dashboard/settings"
+                ? searchParams.get("tab") === item.key
+                : false;
+
             return (
               <Button
                 key={item.key}
                 type={isActive ? "primary" : "text"}
                 style={{
                   height: "auto",
-                  padding: "8px 16px"
                 }}
                 onClick={() => {
-                  if (pathname === "/settings" || pathname === "/dashboard/settings") {
+                  if (
+                    pathname === "/settings" ||
+                    pathname === "/dashboard/settings"
+                  ) {
                     // For Settings page, navigate with tab parameter
                     router.push(`/settings?tab=${item.key}`);
                   } else if (pathname === "/dashboard") {
@@ -616,16 +628,35 @@ export function Navigation({ children }: NavigationProps) {
           placement="bottomRight"
           arrow
         >
-          <Button type="text" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Avatar size="small" style={{ backgroundColor: token.colorSuccess }}>
+          <Button
+            type="text"
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <Avatar
+              size="small"
+              style={{ backgroundColor: token.colorSuccess }}
+            >
               {userInitial}
             </Avatar>
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "14px", fontWeight: 500, color: token.colorText }}>
+              <div
+                style={{
+                  fontSize: "14px",
+                  lineHeight: "16px",
+                  fontWeight: 500,
+                  color: token.colorText,
+                }}
+              >
                 {userName}
               </div>
               {userEmail && (
-                <div style={{ fontSize: "12px", color: token.colorTextSecondary }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    lineHeight: "16px",
+                    color: token.colorTextSecondary,
+                  }}
+                >
                   {userEmail}
                 </div>
               )}
@@ -641,7 +672,7 @@ export function Navigation({ children }: NavigationProps) {
       style={{
         marginLeft: isDesktop ? (collapsed ? 80 : 260) : 0,
         padding: isMobileOrTablet ? "8px" : "16px",
-        minHeight: "calc(100vh - 64px)",
+        minHeight: "calc(100vh - 200px)",
         background: "#f0f2f5",
         transition: "all 0.2s",
       }}
@@ -649,7 +680,7 @@ export function Navigation({ children }: NavigationProps) {
       <div
         className="bg-white rounded-lg shadow-sm"
         style={{
-          minHeight: "calc(100vh - 112px)",
+          minHeight: "calc(100vh - 130px)",
           padding: isMobileOrTablet ? "12px" : "24px",
         }}
       >
