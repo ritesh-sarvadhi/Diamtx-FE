@@ -1,12 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch } from "react-redux";
 import userReducer from "./userSlice";
+import settingsReducer from "./settingsSlice";
 
 // Configure the store with the reducers
 const store = configureStore({
   reducer: {
     user: userReducer,
-    // Add other reducers here
+    settings: settingsReducer,
   },
   // Add middleware configuration if needed
   middleware: (getDefaultMiddleware) =>

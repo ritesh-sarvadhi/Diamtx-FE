@@ -352,6 +352,10 @@ export function Navigation({ children }: NavigationProps) {
       label: "Master",
     },
     {
+      key: "partyMaster",
+      label: "Party Master",
+    },
+    {
       key: "system",
       label: "System Settings",
     },

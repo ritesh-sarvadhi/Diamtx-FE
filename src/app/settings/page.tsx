@@ -10,12 +10,10 @@ import SystemSettingsPage from "@/components/settings/SystemSettingsPage";
 import InventoryConfigPage from "@/components/settings/InventoryConfigPage";
 import RolePermissionPage from "@/components/settings/RolePermissionPage";
 import PriceSettingsPage from "@/components/settings/PriceSettingsPage";
-import { MasterRecord } from "@/services/ProjectService";
 
 const { Content } = Layout;
 
 export default function SettingsPage() {
-  const [selectedMaster, setSelectedMaster] = useState<MasterRecord | null>(null);
   const [activeTab, setActiveTab] = useState("master");
   const { token } = theme.useToken();
   const searchParams = useSearchParams();
@@ -41,15 +39,12 @@ export default function SettingsPage() {
           <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
             {/* Left Child Sidebar */}
             <Col span={6}>
-              <SettingSidebar 
-                selectedMasterId={selectedMaster?.id ?? null}
-                onSelect={setSelectedMaster}
-              />
+              <SettingSidebar />
             </Col>
             
             {/* Right Content Panel */}
             <Col span={18}>
-              <SettingContent master={selectedMaster} />
+              <SettingContent />
             </Col>
           </Row>
         );
@@ -65,13 +60,10 @@ export default function SettingsPage() {
         return (
           <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
             <Col span={6}>
-              <SettingSidebar 
-                selectedMasterId={selectedMaster?.id ?? null}
-                onSelect={setSelectedMaster}
-              />
+              <SettingSidebar />
             </Col>
             <Col span={18}>
-              <SettingContent master={selectedMaster} />
+              <SettingContent />
             </Col>
           </Row>
         );

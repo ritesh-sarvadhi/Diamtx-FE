@@ -24,72 +24,71 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  apiFetchSubMasters,
-  apiUpdateMasterStatus,
-  MasterRecord,
-} from "@/services/ProjectService";
+  fetchSubMasters,
+  updateMasterStatus,
+  clearSubMastersError,
+} from "@/store/settingsSlice";
+import type { MasterRecord } from "@/services/ProjectService";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const PLACEHOLDER_IMAGE = "/ListImage_placeholder.png";
 
 type SubMasterRow = MasterRecord & { rowNo?: number };
 
-interface SettingContentProps {
-  master: MasterRecord | null;
-}
-
-export default function SettingContent({ master }: SettingContentProps) {
+export default function SettingContent() {
   const { token } = theme.useToken();
-  const [subMasters, setSubMasters] = useState<MasterRecord[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const {
+    masters,
+    selectedMasterId,
+    subMastersByMasterId,
+    subMastersStatus,
+    subMastersError,
+  } = useAppSelector((state) => state.settings);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [updatingFieldKey, setUpdatingFieldKey] = useState<string | null>(null);
 
+  const selectedMaster = useMemo(
+    () => masters.find((item) => item.id === selectedMasterId) ?? null,
+    [masters, selectedMasterId]
+  );
+
+  const subMasters = selectedMasterId
+    ? subMastersByMasterId[selectedMasterId] || []
+    : [];
+
+  const subMasterStatus = selectedMasterId
+    ? subMastersStatus[selectedMasterId]
+    : undefined;
+
+  const isLoadingSubMasters = subMasterStatus === "loading";
+
+  const subMasterError = selectedMasterId
+    ? subMastersError[selectedMasterId] || null
+    : null;
+
   useEffect(() => {
-    if (!master?.id) {
-      setSubMasters([]);
-      setSearchTerm("");
-      setCurrentPage(1);
+    if (!selectedMasterId) {
       return;
     }
 
-    let ignore = false;
+    const status = subMastersStatus[selectedMasterId];
 
-    const fetchSubMasters = async () => {
-      setLoading(true);
-      setError(null);
+    if (!status || status === "idle") {
+      dispatch(fetchSubMasters(selectedMasterId));
+    }
+  }, [dispatch, selectedMasterId, subMastersStatus]);
 
-      try {
-        const response = await apiFetchSubMasters(master.id);
-        if (!ignore) {
-          setSubMasters(response.data.data || []);
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error("Failed to load sub masters", err);
-          setError("Unable to load sub master list");
-          setSubMasters([]);
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchSubMasters();
+  useEffect(() => {
     setSearchTerm("");
     setCurrentPage(1);
-
-    return () => {
-      ignore = true;
-    };
-  }, [master?.id]);
+  }, [selectedMasterId]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -130,41 +129,43 @@ export default function SettingContent({ master }: SettingContentProps) {
       }));
   }, [filteredData, currentPage, pageSize]);
 
-  const handleStatusChange = useCallback(async (
-    record: SubMasterRow,
-    field: "isActive" | "isWebDisplay" | "isDefault",
-    value: boolean
-  ) => {
-    if (!record.id) {
-      return;
-    }
+  const handleStatusChange = useCallback(
+    async (
+      record: SubMasterRow,
+      field: "isActive" | "isWebDisplay" | "isDefault",
+      value: boolean
+    ) => {
+      if (!record.id) {
+        return;
+      }
 
-    const updateKey = `${record.id}-${field}`;
-    setUpdatingFieldKey(updateKey);
+      const updateKey = `${record.id}-${field}`;
+      setUpdatingFieldKey(updateKey);
 
-    try {
-      const payload = {
-        isActive: field === "isActive" ? value : Boolean(record.isActive),
-        isWebDisplay:
-          field === "isWebDisplay" ? value : Boolean(record.isWebDisplay),
-        isDefault: field === "isDefault" ? value : Boolean(record.isDefault),
-      } as const;
-
-      const response = await apiUpdateMasterStatus(record.id, payload);
-      const updated = response.data.data;
-
-      setSubMasters((prev) =>
-        prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
-      );
-
-      message.success("Status updated successfully");
-    } catch (err) {
-      console.error("Failed to update master status", err);
-      message.error("Failed to update status");
-    } finally {
-      setUpdatingFieldKey(null);
-    }
-  }, [setSubMasters, setUpdatingFieldKey]);
+      try {
+        await dispatch(
+          updateMasterStatus({
+            masterId: record.id,
+            payload: {
+              isActive: field === "isActive" ? value : Boolean(record.isActive),
+              isWebDisplay:
+                field === "isWebDisplay"
+                  ? value
+                  : Boolean(record.isWebDisplay),
+              isDefault: field === "isDefault" ? value : Boolean(record.isDefault),
+            },
+          })
+        ).unwrap();
+        message.success("Status updated successfully");
+      } catch (error) {
+        console.error("Failed to update master status", error);
+        message.error("Failed to update status");
+      } finally {
+        setUpdatingFieldKey(null);
+      }
+    },
+    [dispatch]
+  );
 
   const isUpdating = useCallback(
     (recordId: string, field: "isActive" | "isWebDisplay" | "isDefault") =>
@@ -229,7 +230,7 @@ export default function SettingContent({ master }: SettingContentProps) {
         render: (_value, record) => (
           <Checkbox
             checked={record.isActive}
-            disabled={loading || isUpdating(record.id, "isActive")}
+            disabled={isLoadingSubMasters || isUpdating(record.id, "isActive")}
             onChange={(event) =>
               handleStatusChange(record, "isActive", event.target.checked)
             }
@@ -244,7 +245,7 @@ export default function SettingContent({ master }: SettingContentProps) {
         render: (_value, record) => (
           <Checkbox
             checked={record.isWebDisplay ?? false}
-            disabled={loading || isUpdating(record.id, "isWebDisplay")}
+            disabled={isLoadingSubMasters || isUpdating(record.id, "isWebDisplay")}
             onChange={(event) =>
               handleStatusChange(record, "isWebDisplay", event.target.checked)
             }
@@ -259,7 +260,7 @@ export default function SettingContent({ master }: SettingContentProps) {
         render: (_value, record) => (
           <Checkbox
             checked={record.isDefault}
-            disabled={loading || isUpdating(record.id, "isDefault")}
+            disabled={isLoadingSubMasters || isUpdating(record.id, "isDefault")}
             onChange={(event) =>
               handleStatusChange(record, "isDefault", event.target.checked)
             }
@@ -285,7 +286,7 @@ export default function SettingContent({ master }: SettingContentProps) {
         ),
       },
     ],
-    [loading, handleStatusChange, isUpdating]
+    [handleStatusChange, isLoadingSubMasters, isUpdating]
   );
 
   const handlePageChange = (page: number, size?: number) => {
@@ -302,11 +303,9 @@ export default function SettingContent({ master }: SettingContentProps) {
 
   const totalItems = filteredData.length;
   const pageStart = totalItems ? (currentPage - 1) * pageSize + 1 : 0;
-  const pageEnd = totalItems
-    ? Math.min(pageStart + pageSize - 1, totalItems)
-    : 0;
+  const pageEnd = totalItems ? Math.min(pageStart + pageSize - 1, totalItems) : 0;
 
-  const emptyState = master
+  const emptyState = selectedMaster
     ? <Empty description="No sub masters found" />
     : <Empty description="Select a master to view sub masters" />;
 
@@ -331,11 +330,11 @@ export default function SettingContent({ master }: SettingContentProps) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <Title level={3} style={{ margin: 0 }}>
-            {master?.name || "Select a Master"}
+            {selectedMaster?.name || "Select a Master"}
           </Title>
-          {master && (
-            <Tag color={master.isActive ? "green" : "default"}>
-              {master.isActive ? "Active" : "Inactive"}
+          {selectedMaster && (
+            <Tag color={selectedMaster.isActive ? "green" : "default"}>
+              {selectedMaster.isActive ? "Active" : "Inactive"}
             </Tag>
           )}
         </div>
@@ -347,19 +346,25 @@ export default function SettingContent({ master }: SettingContentProps) {
             style={{ width: 200 }}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            disabled={!master}
+            disabled={!selectedMasterId}
             allowClear
           />
-          <Button type="primary" icon={<PlusOutlined />} disabled={!master}>
+          <Button type="primary" icon={<PlusOutlined />} disabled={!selectedMasterId}>
             + Sub Master
           </Button>
         </div>
       </div>
 
       <div style={{ flex: 1, overflow: "auto", padding: "0 24px" }}>
-        {error && (
+        {subMasterError && selectedMasterId && (
           <div style={{ margin: "16px 0" }}>
-            <Alert type="error" message={error} showIcon closable onClose={() => setError(null)} />
+            <Alert
+              type="error"
+              message={subMasterError}
+              showIcon
+              closable
+              onClose={() => dispatch(clearSubMastersError(selectedMasterId))}
+            />
           </div>
         )}
         <Table
@@ -368,7 +373,7 @@ export default function SettingContent({ master }: SettingContentProps) {
           rowKey={(record) => record.id}
           pagination={false}
           size="small"
-          loading={loading}
+          loading={isLoadingSubMasters}
           locale={{ emptyText: emptyState }}
         />
       </div>
@@ -382,11 +387,9 @@ export default function SettingContent({ master }: SettingContentProps) {
           alignItems: "center",
         }}
       >
-        <Typography.Text>
-          {totalItems
-            ? `${pageStart}-${pageEnd} of ${totalItems} items`
-            : "No items"}
-        </Typography.Text>
+        <Text>
+          {totalItems ? `${pageStart}-${pageEnd} of ${totalItems} items` : "No items"}
+        </Text>
         <Pagination
           current={currentPage}
           total={totalItems}
@@ -396,7 +399,7 @@ export default function SettingContent({ master }: SettingContentProps) {
           showQuickJumper={false}
           onChange={handlePageChange}
           onShowSizeChange={handlePageSizeChange}
-          disabled={!master || !totalItems}
+          disabled={!selectedMasterId || !totalItems}
         />
       </div>
     </Card>

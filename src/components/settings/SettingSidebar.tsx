@@ -1,52 +1,44 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Menu, Button, Typography, theme, Spin, Alert } from "antd";
 import { PlusOutlined, MoreOutlined } from "@ant-design/icons";
-import { apiFetchMasters, MasterRecord } from "@/services/ProjectService";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchMasters,
+  selectMaster,
+  clearMastersError,
+} from "@/store/settingsSlice";
 
 const { Text } = Typography;
 
-interface SettingSidebarProps {
-  selectedMasterId: string | null;
-  onSelect: (master: MasterRecord) => void;
-}
-
-export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSidebarProps) {
+export default function SettingSidebar() {
   const { token } = theme.useToken();
-  const [masters, setMasters] = useState<MasterRecord[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const {
+    masters,
+    mastersStatus,
+    mastersError,
+    selectedMasterId,
+  } = useAppSelector((state) => state.settings);
+
+  const isLoading = mastersStatus === "loading";
 
   useEffect(() => {
-    const fetchMasters = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiFetchMasters();
-        const list = response.data.data || [];
-        setMasters(list);
-      } catch (err) {
-        console.error("Failed to load masters", err);
-        setError("Unable to load master list");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMasters();
-  }, []);
+    if (mastersStatus === "idle") {
+      dispatch(fetchMasters());
+    }
+  }, [dispatch, mastersStatus]);
 
   useEffect(() => {
-    if (!masters.length) {
-      return;
+    if (
+      mastersStatus === "succeeded" &&
+      (!selectedMasterId || !masters.some((item) => item.id === selectedMasterId)) &&
+      masters.length
+    ) {
+      dispatch(selectMaster(masters[0].id));
     }
-
-    const currentExists = masters.some((item) => item.id === selectedMasterId);
-    if (!currentExists && masters[0]) {
-      onSelect(masters[0]);
-    }
-  }, [masters, selectedMasterId, onSelect]);
+  }, [dispatch, mastersStatus, masters, selectedMasterId]);
 
   const menuItems = useMemo(() => {
     return masters.map((item) => ({
@@ -74,7 +66,7 @@ export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSi
         alignItems: "center"
       }}>
         <Text strong>
-          {loading ? "Loading..." : `${menuItems.length} Results`}
+          {isLoading ? "Loading..." : `${menuItems.length} Results`}
         </Text>
         <Button 
           type="primary" 
@@ -87,11 +79,17 @@ export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSi
 
       {/* Menu */}
       <div style={{ flex: 1, overflow: "auto" }}>
-        {error ? (
+        {mastersError ? (
           <div style={{ padding: "16px" }}>
-            <Alert type="error" message={error} showIcon />
+            <Alert
+              type="error"
+              message={mastersError}
+              showIcon
+              closable
+              onClose={() => dispatch(clearMastersError())}
+            />
           </div>
-        ) : loading && !menuItems.length ? (
+        ) : isLoading && !menuItems.length ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "24px" }}>
             <Spin />
           </div>
@@ -116,10 +114,7 @@ export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSi
               )
             }))}
             onClick={({ key }) => {
-              const selectedMaster = masters.find((item) => item.id === key);
-              if (selectedMaster) {
-                onSelect(selectedMaster);
-              }
+              dispatch(selectMaster(String(key)));
             }}
             style={{ 
               border: "none",
