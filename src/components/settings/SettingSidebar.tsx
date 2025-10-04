@@ -1,22 +1,59 @@
 "use client";
 
-import { Menu, Button, Typography, Space, theme } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { Menu, Button, Typography, theme, Spin, Alert } from "antd";
 import { PlusOutlined, MoreOutlined } from "@ant-design/icons";
-import { getMenuItems } from "./data/settingsData";
+import { apiFetchMasters, MasterRecord } from "@/services/ProjectService";
 
 const { Text } = Typography;
 
 interface SettingSidebarProps {
-  selectedKey: string;
-  onSelect: (key: string) => void;
+  selectedMasterId: string | null;
+  onSelect: (master: MasterRecord) => void;
 }
 
-export default function SettingSidebar({ selectedKey, onSelect }: SettingSidebarProps) {
+export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSidebarProps) {
   const { token } = theme.useToken();
-  const menuItems = getMenuItems().map(item => ({
-    ...item,
-    icon: <MoreOutlined />,
-  }));
+  const [masters, setMasters] = useState<MasterRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMasters = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiFetchMasters();
+        const list = response.data.data || [];
+        setMasters(list);
+      } catch (err) {
+        console.error("Failed to load masters", err);
+        setError("Unable to load master list");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMasters();
+  }, []);
+
+  useEffect(() => {
+    if (!masters.length) {
+      return;
+    }
+
+    const currentExists = masters.some((item) => item.id === selectedMasterId);
+    if (!currentExists && masters[0]) {
+      onSelect(masters[0]);
+    }
+  }, [masters, selectedMasterId, onSelect]);
+
+  const menuItems = useMemo(() => {
+    return masters.map((item) => ({
+      key: item.id,
+      label: item.name || item.code,
+    }));
+  }, [masters]);
 
   return (
     <div style={{ 
@@ -36,7 +73,9 @@ export default function SettingSidebar({ selectedKey, onSelect }: SettingSidebar
         justifyContent: "space-between",
         alignItems: "center"
       }}>
-        <Text strong>38 Results</Text>
+        <Text strong>
+          {loading ? "Loading..." : `${menuItems.length} Results`}
+        </Text>
         <Button 
           type="primary" 
           icon={<PlusOutlined />}
@@ -48,29 +87,46 @@ export default function SettingSidebar({ selectedKey, onSelect }: SettingSidebar
 
       {/* Menu */}
       <div style={{ flex: 1, overflow: "auto" }}>
-        <Menu
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={menuItems.map(item => ({
-            ...item,
-            label: (
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                width: "100%"
-              }}>
-                <span>{item.label}</span>
-                <span style={{ color: "#bfbfbf" }}>{item.icon}</span>
-              </div>
-            )
-          }))}
-          onClick={({ key }) => onSelect(key)}
-          style={{ 
-            border: "none",
-            background: "transparent"
-          }}
-        />
+        {error ? (
+          <div style={{ padding: "16px" }}>
+            <Alert type="error" message={error} showIcon />
+          </div>
+        ) : loading && !menuItems.length ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: "24px" }}>
+            <Spin />
+          </div>
+        ) : (
+          <Menu
+            mode="inline"
+            selectedKeys={selectedMasterId ? [selectedMasterId] : []}
+            items={menuItems.map(item => ({
+              ...item,
+              label: (
+                <div style={{ 
+                  display: "flex", 
+                  justifyContent: "space-between", 
+                  alignItems: "center",
+                  width: "100%"
+                }}>
+                  <span>{item.label}</span>
+                  <span style={{ color: "#bfbfbf" }}>
+                    <MoreOutlined />
+                  </span>
+                </div>
+              )
+            }))}
+            onClick={({ key }) => {
+              const selectedMaster = masters.find((item) => item.id === key);
+              if (selectedMaster) {
+                onSelect(selectedMaster);
+              }
+            }}
+            style={{ 
+              border: "none",
+              background: "transparent"
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 // API Configuration
-export const BASE_API_URL = "https://72l67dh1-5000.inc1.devtunnels.ms/api/v1";
+export const BASE_API_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000/api/v1";
 
 // API Endpoints
 export const API_ENDPOINTS = {
@@ -16,11 +17,7 @@ export const API_ENDPOINTS = {
   DASHBOARD_STATS: "/dashboard/stats",
 
   // Settings endpoints
-  MASTERS: "/masters",
-  MASTERS_LIST: "/masters/list",
-  MASTERS_CREATE: "/masters/create",
-  MASTERS_UPDATE: "/masters/update",
-  MASTERS_DELETE: "/masters/delete",
+  MASTER_LIST: "/admin/master",
 } as const;
 
 // Helper function to build full API URL

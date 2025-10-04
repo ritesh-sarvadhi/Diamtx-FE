@@ -1,6 +1,7 @@
 "use client";
 
 import { appConfig } from "@/config/app.config";
+import { BASE_API_URL } from "@/config/api";
 import store from "@/store/store";
 import { logout } from "@/store/userSlice";
 import { decrypt } from "@/utils/enc-dec";
@@ -12,7 +13,7 @@ const unauthorizedCode = [401];
 
 const BaseService = axios.create({
   timeout: 120000,
-  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || BASE_API_URL,
 });
 
 // Set up interceptors immediately when the service is created
