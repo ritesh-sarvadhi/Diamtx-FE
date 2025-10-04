@@ -1,17 +1,12 @@
 "use client";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/DashboardLayout";
+import BlankComponent from "@/components/BlankComponent";
 
 export default function SettingsPage() {
   return (
     <ProtectedRoute>
-      <DashboardLayout>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Settings</h1>
-          <p className="text-gray-600">Manage your application settings here.</p>
-        </div>
-      </DashboardLayout>
+      <BlankComponent />
     </ProtectedRoute>
   );
 }
