@@ -324,7 +324,7 @@ export default function SettingContent({ master }: SettingContentProps) {
       style={{
         height: "100%",
         borderRadius: token.borderRadius,
-        boxShadow: token.boxShadow,
+        // boxShadow: token.boxShadow,
         border: `1px solid ${token.colorBorder}`,
       }}
       bodyStyle={{ padding: 0, height: "100%", overflow: "hidden" }}

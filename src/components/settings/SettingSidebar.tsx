@@ -12,7 +12,10 @@ interface SettingSidebarProps {
   onSelect: (master: MasterRecord) => void;
 }
 
-export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSidebarProps) {
+export default function SettingSidebar({
+  selectedMasterId,
+  onSelect,
+}: SettingSidebarProps) {
   const { token } = theme.useToken();
   const [masters, setMasters] = useState<MasterRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,31 +59,31 @@ export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSi
   }, [masters]);
 
   return (
-    <div style={{ 
-      background: token.colorBgContainer, 
-      borderRadius: token.borderRadius,
-      boxShadow: token.boxShadow,
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      border: `1px solid ${token.colorBorder}`
-    }}>
-      {/* Header */}
-      <div style={{ 
-        padding: "16px", 
-        borderBottom: `1px solid ${token.colorBorder}`,
+    <div
+      style={{
+        background: token.colorBgContainer,
+        borderRadius: token.borderRadius,
+        // boxShadow: token.boxShadow,
+        height: "100%",
         display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
+        flexDirection: "column",
+        border: `1px solid ${token.colorBorder}`,
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: "16px",
+          borderBottom: `1px solid ${token.colorBorder}`,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Text strong>
           {loading ? "Loading..." : `${menuItems.length} Results`}
         </Text>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />}
-          size="small"
-        >
+        <Button type="primary" icon={<PlusOutlined />} size="small">
           + Master
         </Button>
       </div>
@@ -92,28 +95,36 @@ export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSi
             <Alert type="error" message={error} showIcon />
           </div>
         ) : loading && !menuItems.length ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "24px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "24px",
+            }}
+          >
             <Spin />
           </div>
         ) : (
           <Menu
             mode="inline"
             selectedKeys={selectedMasterId ? [selectedMasterId] : []}
-            items={menuItems.map(item => ({
+            items={menuItems.map((item) => ({
               ...item,
               label: (
-                <div style={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
-                  alignItems: "center",
-                  width: "100%"
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   <span>{item.label}</span>
                   <span style={{ color: "#bfbfbf" }}>
                     <MoreOutlined />
                   </span>
                 </div>
-              )
+              ),
             }))}
             onClick={({ key }) => {
               const selectedMaster = masters.find((item) => item.id === key);
@@ -121,9 +132,9 @@ export default function SettingSidebar({ selectedMasterId, onSelect }: SettingSi
                 onSelect(selectedMaster);
               }
             }}
-            style={{ 
+            style={{
               border: "none",
-              background: "transparent"
+              background: "transparent",
             }}
           />
         )}
