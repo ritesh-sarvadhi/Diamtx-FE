@@ -11,13 +11,21 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
+  SettingOutlined,
+  FileTextOutlined,
+  AppstoreOutlined,
+  TeamOutlined,
+  ApiOutlined,
+  BarChartOutlined,
+  UsergroupAddOutlined,
 } from "@ant-design/icons";
-import { Avatar, Button, Drawer, Layout, theme } from "antd";
+import { Avatar, Button, Drawer, Layout, theme, Dropdown, Typography } from "antd";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const { Header } = Layout;
+const { Text } = Typography;
 
 interface NavigationProps {
   children: React.ReactNode;
@@ -258,9 +266,20 @@ export function Navigation({ children }: NavigationProps) {
 
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
-    token: { colorPrimary },
+    token,
   } = theme.useToken();
+
+  const getInitial = (value?: string | null) => {
+    if (!value) return undefined;
+    const trimmed = value.trim();
+    return trimmed ? trimmed[0].toUpperCase() : undefined;
+  };
+
+  const userName = user?.name || user?.email || "User";
+  const userEmail = user?.email;
+  const userInitial = getInitial(user?.name) ?? getInitial(user?.email) ?? "U";
 
   useEffect(() => {
     setIsHydrated(true);
@@ -298,6 +317,66 @@ export function Navigation({ children }: NavigationProps) {
     return <>{children}</>;
   }
 
+  // Main navigation items (Lab Grown Stone, Natural Stone)
+  const mainNavItems = [
+    {
+      key: "lab-grown",
+      label: "Lab Grown Stone",
+    },
+    {
+      key: "natural",
+      label: "Natural Stone",
+    },
+  ];
+
+  // Dashboard sub-navigation items
+  const dashboardSubNavItems = [
+    {
+      key: "dashboard",
+      label: "Dashboard",
+    },
+    {
+      key: "enquiry",
+      label: "Enquiry",
+    },
+    {
+      key: "search",
+      label: "Search",
+    },
+  ];
+
+  // Settings sub-navigation items
+  const settingsSubNavItems = [
+    {
+      key: "master",
+      label: "Master",
+    },
+    {
+      key: "system",
+      label: "System Settings",
+    },
+    {
+      key: "inventory",
+      label: "Inventory Configuration",
+    },
+    {
+      key: "role",
+      label: "Role Permission",
+    },
+    {
+      key: "price",
+      label: "Price Settings",
+    },
+  ];
+
+  const getCurrentNavItems = () => {
+    if (pathname === "/settings" || pathname === "/dashboard/settings") {
+      return settingsSubNavItems;
+    }
+    // For dashboard and all other pages, show main navigation items
+    return mainNavItems;
+  };
+
   const menuItems = [
     {
       key: "dashboard",
@@ -305,19 +384,46 @@ export function Navigation({ children }: NavigationProps) {
       label: "Dashboard",
       href: "/dashboard",
     },
-    // ref for nested routes
     {
-      key: "production",
-      icon: <BuildOutlined style={{ fontSize: "18px" }} />,
-      label: "Production",
-      children: [
-        {
-          key: "tracker",
-          icon: <LineChartOutlined />,
-          label: "Production Tracker",
-          href: "/production/tracker",
-        },
-      ],
+      key: "inventory",
+      icon: <AppstoreOutlined style={{ fontSize: "18px" }} />,
+      label: "Inventory",
+    },
+    {
+      key: "transaction",
+      icon: <FileTextOutlined style={{ fontSize: "18px" }} />,
+      label: "Transaction",
+    },
+    {
+      key: "client",
+      icon: <TeamOutlined style={{ fontSize: "18px" }} />,
+      label: "Client",
+    },
+    {
+      key: "business-associate",
+      icon: <UsergroupAddOutlined style={{ fontSize: "18px" }} />,
+      label: "Business Associate",
+    },
+    {
+      key: "api-ftp",
+      icon: <ApiOutlined style={{ fontSize: "18px" }} />,
+      label: "API / FTP Clients",
+    },
+    {
+      key: "track-reports",
+      icon: <BarChartOutlined style={{ fontSize: "18px" }} />,
+      label: "Track Reports",
+    },
+    {
+      key: "guests",
+      icon: <UsergroupAddOutlined style={{ fontSize: "18px" }} />,
+      label: "Guests",
+    },
+    {
+      key: "settings",
+      icon: <SettingOutlined style={{ fontSize: "18px" }} />,
+      label: "Settings",
+      href: "/settings",
     },
   ];
 
@@ -332,50 +438,25 @@ export function Navigation({ children }: NavigationProps) {
         flexDirection: "column",
       }}
     >
-      <div
-        className={`flex items-center justify-${
-          collapsed && !forDrawer ? "center" : "start"
-        } bg-white border-b border-gray-100 cursor-pointer`}
-        style={{
-          height: "80px",
-          flexShrink: 0,
-          padding: collapsed && !forDrawer ? "0" : "0 16px",
-        }}
-      >
-        <Link
-          href="/dashboard"
-          scroll={false}
-          as={"/dashboard"}
-          prefetch={true}
-        >
-          {collapsed && !forDrawer ? (
-            <div
-              className="flex items-center justify-center w-12 h-12 rounded-lg"
-              style={{
-                background: `linear-gradient(135deg, ${appConfig.theme.primaryColor} 0%, ${appConfig.theme.primaryColor}CC 100%)`,
-              }}
-            >
-              <span className="text-white font-bold text-xl">I</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center"
-                style={{
-                  background: `linear-gradient(135deg, ${appConfig.theme.primaryColor} 0%, ${appConfig.theme.primaryColor}CC 100%)`,
-                }}
-              >
-                <span className="text-white font-bold text-xl">I</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold text-gray-800 whitespace-nowrap">
-                  Isha MFG
-                </span>
-                <span className="text-xs text-gray-500">v2.0.0</span>
-              </div>
-            </div>
-          )}
-        </Link>
+      {/* Sidebar Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <Text strong className="text-lg text-gray-800">
+            {collapsed && !forDrawer ? "Diamtx" : "Diamtx"}
+          </Text>
+          <Button
+            type="text"
+            icon={collapsed && !forDrawer ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => {
+              if (isMobileOrTablet) {
+                setMobileOpen(!mobileOpen);
+              } else {
+                setCollapsed(!collapsed);
+              }
+            }}
+            className="text-gray-600 hover:text-blue-600"
+          />
+        </div>
       </div>
 
       <div
@@ -415,34 +496,19 @@ export function Navigation({ children }: NavigationProps) {
                 </div>
               </Link>
             ) : (
-              <div className="mb-2">
+              <div
+                className={`flex items-center h-10 px-4 rounded-lg cursor-pointer transition-colors ${
+                  "text-gray-700 hover:bg-[var(--light-primary-color)] hover:text-[var(--primary-color)]"
+                }`}
+              >
+                <span
+                  className={`${collapsed && !forDrawer ? "mr-0" : "mr-3"}`}
+                >
+                  {item.icon}
+                </span>
                 {!(collapsed && !forDrawer) && (
-                  <div className="px-6 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    {item.label}
-                  </div>
+                  <span className="whitespace-nowrap">{item.label}</span>
                 )}
-                {item.children?.map((child) => (
-                  <Link
-                    key={child.key}
-                    as={child.href}
-                    href={child.href}
-                    prefetch={true}
-                    scroll={false}
-                  >
-                    <div
-                      className={`flex items-center h-10 px-4 rounded-lg cursor-pointer transition-colors mb-1 ${
-                        pathname === child.href
-                          ? "bg-[var(--primary-color)] text-white"
-                          : "text-gray-700 hover:bg-[var(--light-primary-color)] hover:text-[var(--primary-color)]"
-                      }`}
-                    >
-                      <span className="mr-3">{child.icon}</span>
-                      {!(collapsed && !forDrawer) && (
-                        <span className="whitespace-nowrap">{child.label}</span>
-                      )}
-                    </div>
-                  </Link>
-                ))}
               </div>
             )}
           </div>
@@ -478,7 +544,8 @@ export function Navigation({ children }: NavigationProps) {
     <Header
       style={{
         padding: "0 16px",
-        background: "#fff",
+        background: token.colorBgContainer,
+        borderBottom: `1px solid ${token.colorBorder}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -488,45 +555,83 @@ export function Navigation({ children }: NavigationProps) {
         height: 64,
         marginLeft: isDesktop ? (collapsed ? 80 : 260) : 0,
         transition: "all 0.2s",
-        boxShadow: "0 1px 4px rgba(0, 21, 41, 0.08)",
+        boxShadow: token.boxShadow,
       }}
     >
-      <div className="flex items-center">
-        <Button
-          type="text"
-          icon={
-            isMobileOrTablet ? (
-              <MenuUnfoldOutlined />
-            ) : collapsed ? (
-              <MenuUnfoldOutlined />
-            ) : (
-              <MenuFoldOutlined />
-            )
-          }
-          onClick={() => {
-            if (isMobileOrTablet) {
-              setMobileOpen(!mobileOpen);
-            } else {
-              setCollapsed(!collapsed);
-            }
-          }}
-          style={{ width: 48, height: 48 }}
-        />
+      <div className="flex items-center space-x-6">
+
+        {/* Sub Navigation - Dashboard, Enquiry, Search or Settings Menu */}
+        <div className="flex space-x-4 ml-8">
+          {getCurrentNavItems().map((item) => {
+            const isActive = (pathname === "/settings" || pathname === "/dashboard/settings") 
+              ? searchParams.get('tab') === item.key 
+              : false;
+            
+            return (
+              <Button
+                key={item.key}
+                type={isActive ? "primary" : "text"}
+                style={{
+                  height: "auto",
+                  padding: "8px 16px"
+                }}
+                onClick={() => {
+                  if (pathname === "/settings" || pathname === "/dashboard/settings") {
+                    // For Settings page, navigate with tab parameter
+                    router.push(`/settings?tab=${item.key}`);
+                  } else if (pathname === "/dashboard") {
+                    // For Dashboard, handle dashboard sub-navigation
+                    // Add your dashboard sub-navigation logic here
+                  }
+                }}
+              >
+                {item.label}
+              </Button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 cursor-pointer px-3 py-1 rounded-lg">
-          <Avatar
-            size={32}
-            icon={<UserOutlined />}
-            style={{ backgroundColor: colorPrimary }}
-            src={user?.avatar}
-          />
-          <div className="hidden sm:block">
-            <div className="text-sm font-medium">{user?.name || "User"}</div>
-            <div className="text-xs text-gray-500">{user?.role || "Admin"}</div>
-          </div>
-        </div>
+      <div className="flex items-center space-x-4">
+        {/* User Profile Dropdown */}
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "profile",
+                icon: <UserOutlined />,
+                label: "Profile",
+              },
+              {
+                key: "logout",
+                icon: <LogoutOutlined />,
+                label: "Logout",
+                onClick: () => {
+                  logout();
+                  router.push("/login");
+                },
+              },
+            ],
+          }}
+          placement="bottomRight"
+          arrow
+        >
+          <Button type="text" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Avatar size="small" style={{ backgroundColor: token.colorSuccess }}>
+              {userInitial}
+            </Avatar>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "14px", fontWeight: 500, color: token.colorText }}>
+                {userName}
+              </div>
+              {userEmail && (
+                <div style={{ fontSize: "12px", color: token.colorTextSecondary }}>
+                  {userEmail}
+                </div>
+              )}
+            </div>
+          </Button>
+        </Dropdown>
       </div>
     </Header>
   );
@@ -542,10 +647,10 @@ export function Navigation({ children }: NavigationProps) {
       }}
     >
       <div
-        className="bg-white rounded-lg"
+        className="bg-white rounded-lg shadow-sm"
         style={{
           minHeight: "calc(100vh - 112px)",
-          padding: isMobileOrTablet ? "12px" : "16px",
+          padding: isMobileOrTablet ? "12px" : "24px",
         }}
       >
         {children}
