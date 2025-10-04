@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Layout, Row, Col, theme, Typography } from "antd";
+import { Layout, Row, Col, theme } from "antd";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SettingSidebar from "@/components/settings/SettingSidebar";
@@ -10,12 +10,12 @@ import SystemSettingsPage from "@/components/settings/SystemSettingsPage";
 import InventoryConfigPage from "@/components/settings/InventoryConfigPage";
 import RolePermissionPage from "@/components/settings/RolePermissionPage";
 import PriceSettingsPage from "@/components/settings/PriceSettingsPage";
+import { MasterRecord } from "@/services/ProjectService";
 
 const { Content } = Layout;
-const { Title } = Typography;
 
 export default function SettingsPage() {
-  const [selectedKey, setSelectedKey] = useState("white");
+  const [selectedMaster, setSelectedMaster] = useState<MasterRecord | null>(null);
   const [activeTab, setActiveTab] = useState("master");
   const { token } = theme.useToken();
   const searchParams = useSearchParams();
@@ -42,14 +42,14 @@ export default function SettingsPage() {
             {/* Left Child Sidebar */}
             <Col span={6}>
               <SettingSidebar 
-                selectedKey={selectedKey} 
-                onSelect={setSelectedKey} 
+                selectedMasterId={selectedMaster?.id ?? null}
+                onSelect={setSelectedMaster}
               />
             </Col>
             
             {/* Right Content Panel */}
             <Col span={18}>
-              <SettingContent sectionKey={selectedKey} />
+              <SettingContent master={selectedMaster} />
             </Col>
           </Row>
         );
@@ -66,12 +66,12 @@ export default function SettingsPage() {
           <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
             <Col span={6}>
               <SettingSidebar 
-                selectedKey={selectedKey} 
-                onSelect={setSelectedKey} 
+                selectedMasterId={selectedMaster?.id ?? null}
+                onSelect={setSelectedMaster}
               />
             </Col>
             <Col span={18}>
-              <SettingContent sectionKey={selectedKey} />
+              <SettingContent master={selectedMaster} />
             </Col>
           </Row>
         );
