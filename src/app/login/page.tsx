@@ -10,6 +10,13 @@ import { Button, Card, Form, Input, message } from "antd";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ApiService from "@/services/ApiService";
+import {
+  initializeAuth,
+  login as loginAction,
+  logout as logoutAction,
+  MasterData,
+} from "@/store/userSlice";
+import { useAppDispatch } from "@/store/hooks";
 
 interface LoginFormData {
   name: string;
@@ -49,7 +56,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const router = useRouter();
-
+  const dispatch = useAppDispatch();
   // const handleLogin = async (values: LoginFormData) => {
   //   setLoading(true);
   //   setErrorMessage("");
@@ -99,6 +106,61 @@ export default function LoginPage() {
   //     setLoading(false);
   //   }
   // };
+  // const handleLogin = async (values: LoginFormData) => {
+  //   setLoading(true);
+  //   setErrorMessage("");
+
+  //   try {
+  //     const result: LoginResponse = await ApiService.login({
+  //       name: values.name,
+  //       password: values.password,
+  //     });
+
+  //     console.log("Login response:", result);
+
+  //     if (result.success && result.data?.token) {
+  //       if (typeof window !== "undefined") {
+  //         try {
+  //           // Store both token and user details
+  //           localStorage.setItem("authToken", result.data.token);
+  //           localStorage.setItem(
+  //             "userDetails",
+  //             JSON.stringify(result.data.userDetails)
+  //           );
+
+  //           const token = localStorage.getItem("authToken");
+  //           if (token) {
+  //             console.log("Token saved to localStorage");
+  //             router.push("/dashboard");
+  //           } else {
+  //             console.log("Token not found in localStorage");
+  //             message.error("Token not found — please login again.");
+  //           }
+  //         } catch (e) {
+  //           console.error("❌ Error saving to localStorage:", e);
+  //         }
+  //       }
+  //     } else {
+  //       console.log("Login failed:", result);
+
+  //       const errorMsg =
+  //         result.message || "Login failed. Please check your credentials.";
+  //       setErrorMessage(errorMsg);
+  //       message.error(errorMsg);
+  //     }
+  //   } catch (error) {
+  //     console.log("Login failed:");
+  //     console.error("Login error:", error);
+  //     const errorMsg =
+  //       "Network error. Please check your connection and try again.";
+  //     setErrorMessage(errorMsg);
+  //     message.error(errorMsg);
+  //   } finally {
+  //     console.log("Login failed swdwdw:");
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleLogin = async (values: LoginFormData) => {
     setLoading(true);
     setErrorMessage("");
@@ -109,39 +171,23 @@ export default function LoginPage() {
         password: values.password,
       });
 
-      console.log("Login response:", result);
-
       if (result.success && result.data?.token) {
-        if (typeof window !== "undefined") {
-          try {
-            // Store both token and user details
-            localStorage.setItem("authToken", result.data.token);
-            localStorage.setItem(
-              "userDetails",
-              JSON.stringify(result.data.userDetails)
-            );
+        // Save token and userDetails
+        localStorage.setItem("authToken", result.data.token);
+        localStorage.setItem(
+          "userDetails",
+          JSON.stringify(result.data.userDetails)
+        );
 
-            console.log("✅ Token & UserDetails saved to localStorage");
-            console.log("authToken:", localStorage.getItem("authToken"));
-            console.log("userDetails:", localStorage.getItem("userDetails"));
-          } catch (e) {
-            console.error("❌ Error saving to localStorage:", e);
-          }
-        }
+        // Dispatch login to Redux
+        dispatch(
+          loginAction({
+            ...result.data.userDetails,
+            token: result.data.token,
+          })
+        );
 
-        // message.success(result.message || "Login successful!");
-
-        // Redirect after short delay
-        setTimeout(() => {
-          if (typeof window !== "undefined") {
-            const token = localStorage.getItem("authToken");
-            if (token) {
-              router.push("/dashboard");
-            } else {
-              message.error("Token not found — please login again.");
-            }
-          }
-        }, 500);
+        // ❌ DO NOT use router.push here — AuthProvider effect will redirect automatically
       } else {
         const errorMsg =
           result.message || "Login failed. Please check your credentials.";
@@ -150,10 +196,8 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      const errorMsg =
-        "Network error. Please check your connection and try again.";
-      setErrorMessage(errorMsg);
-      message.error(errorMsg);
+      setErrorMessage("Network error. Please try again.");
+      message.error("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
