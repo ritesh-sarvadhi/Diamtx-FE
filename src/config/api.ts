@@ -1,5 +1,5 @@
 // API Configuration
-export const BASE_API_URL = "http://localhost:5000/api/v1";
+export const BASE_API_URL = "https://72l67dh1-5000.inc1.devtunnels.ms/api/v1";
 
 // API Endpoints
 export const API_ENDPOINTS = {
@@ -7,14 +7,14 @@ export const API_ENDPOINTS = {
   LOGIN: "/user/login",
   LOGOUT: "/user/logout",
   REFRESH_TOKEN: "/user/refresh-token",
-  
+
   // User endpoints
   USER_PROFILE: "/user/profile",
   UPDATE_PROFILE: "/user/update-profile",
-  
+
   // Dashboard endpoints
   DASHBOARD_STATS: "/dashboard/stats",
-  
+
   // Settings endpoints
   MASTERS: "/masters",
   MASTERS_LIST: "/masters/list",

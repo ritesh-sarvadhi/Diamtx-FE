@@ -101,29 +101,51 @@ const userSlice = createSlice({
         localStorage.removeItem("masters");
       }
     },
+    // initializeAuth(state) {
+    //   if (typeof window !== "undefined") {
+    //     try {
+    //       const token = localStorage.getItem("authToken");
+    //       const userData = localStorage.getItem("userData");
+    //       const masters = localStorage.getItem("masters");
+
+    //       if (token && userData) {
+    //         try {
+    //           const parsedUserData = JSON.parse(userData);
+    //           state.isAuthenticated = true;
+    //           state.token = token;
+    //           state.key = localStorage.getItem("userKey");
+    //           state.userInfo = parsedUserData;
+    //           state.masters = masters ? JSON.parse(masters) : [];
+    //         } catch (error) {
+    //           console.error("Failed to parse user data:", error);
+    //           // Clear invalid data
+    //           localStorage.removeItem("authToken");
+    //           localStorage.removeItem("userKey");
+    //           localStorage.removeItem("userData");
+    //           localStorage.removeItem("masters");
+    //         }
+    //       }
+    //     } catch (error) {
+    //       console.error("Error initializing auth:", error);
+    //     }
+    //   }
+    // },
     initializeAuth(state) {
       if (typeof window !== "undefined") {
         try {
           const token = localStorage.getItem("authToken");
-          const userData = localStorage.getItem("userData");
+          const userData =
+            localStorage.getItem("userData") ||
+            localStorage.getItem("userDetails"); // ✅ try both
           const masters = localStorage.getItem("masters");
 
           if (token && userData) {
-            try {
-              const parsedUserData = JSON.parse(userData);
-              state.isAuthenticated = true;
-              state.token = token;
-              state.key = localStorage.getItem("userKey");
-              state.userInfo = parsedUserData;
-              state.masters = masters ? JSON.parse(masters) : [];
-            } catch (error) {
-              console.error("Failed to parse user data:", error);
-              // Clear invalid data
-              localStorage.removeItem("authToken");
-              localStorage.removeItem("userKey");
-              localStorage.removeItem("userData");
-              localStorage.removeItem("masters");
-            }
+            const parsedUserData = JSON.parse(userData);
+            state.isAuthenticated = true;
+            state.token = token;
+            state.key = localStorage.getItem("userKey");
+            state.userInfo = parsedUserData;
+            state.masters = masters ? JSON.parse(masters) : [];
           }
         } catch (error) {
           console.error("Error initializing auth:", error);

@@ -1,6 +1,11 @@
 "use client";
 
-import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Button, Dropdown, Layout, Menu, Typography } from "antd";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -29,7 +34,11 @@ interface UserDetails {
   };
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [collapsed, setCollapsed] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const router = useRouter();
@@ -102,7 +111,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <Layout className="min-h-screen">
-      <Sider trigger={null} collapsible collapsed={collapsed} className="bg-white shadow-lg">
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        className="bg-white shadow-lg"
+      >
         <div className="p-4 border-b">
           <Text strong className="text-lg">
             {collapsed ? "DG" : "Diamtx"}
@@ -115,7 +129,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="border-0"
         />
       </Sider>
-      
+
       <Layout>
         <Header className="bg-white shadow-sm px-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -125,10 +139,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               onClick={() => setCollapsed(!collapsed)}
               className="text-lg"
             />
-            
+
             <div className="flex space-x-6">
               {getCurrentNavItems().map((item) => (
-                <Button key={item.key} type="text" className="text-gray-700 hover:text-blue-600">
+                <Button
+                  key={item.key}
+                  type="text"
+                  className="text-gray-700 hover:text-blue-600"
+                >
                   {item.label}
                 </Button>
               ))}
@@ -145,16 +163,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <UserOutlined />
                 <div className="text-left">
                   <div className="text-sm font-medium">{userDetails?.name}</div>
-                  <div className="text-xs text-gray-500">{userDetails?.Role?.name}</div>
+                  <div className="text-xs text-gray-500">
+                    {userDetails?.Role?.name}
+                  </div>
                 </div>
               </Button>
             </Dropdown>
           </div>
         </Header>
-        
-        <Content className="p-6 bg-gray-50">
-          {children}
-        </Content>
+
+        <Content className="p-6 bg-gray-50">{children}</Content>
       </Layout>
     </Layout>
   );
