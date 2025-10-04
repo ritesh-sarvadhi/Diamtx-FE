@@ -1,6 +1,11 @@
 "use client";
 
-import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+  LockOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Button, Card, Form, Input, message } from "antd";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -45,6 +50,55 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const router = useRouter();
 
+  // const handleLogin = async (values: LoginFormData) => {
+  //   setLoading(true);
+  //   setErrorMessage("");
+
+  //   try {
+  //     const result: LoginResponse = await ApiService.login({
+  //       name: values.name,
+  //       password: values.password,
+  //     });
+
+  //     console.log("Login response:", result);
+
+  //     if (result.success && result.statusCode === 200) {
+  //       // Save token and userDetails to localStorage
+  //       if (result.data?.token) {
+  //         localStorage.setItem("authToken", result.data.token);
+  //         console.log("Token saved to localStorage");
+  //       }
+  //       if (result.data?.userDetails) {
+  //         localStorage.setItem(
+  //           "userDetails",
+  //           JSON.stringify(result.data.userDetails)
+  //         );
+  //         console.log("UserDetails saved to localStorage");
+  //       }
+
+  //       message.success(result.message || "Login successful!");
+
+  //       window.location.href = "/dashboard";
+  //       // Use window.location.href for more reliable redirect
+  //       setTimeout(() => {
+  //         console.log("Redirecting to dashboard...");
+  //       }, 500);
+  //     } else {
+  //       const errorMsg =
+  //         result.message || "Login failed. Please check your credentials.";
+  //       setErrorMessage(errorMsg);
+  //       message.error(errorMsg);
+  //     }
+  //   } catch (error) {
+  //     console.error("Login error:", error);
+  //     const errorMsg =
+  //       "Network error. Please check your connection and try again.";
+  //     setErrorMessage(errorMsg);
+  //     message.error(errorMsg);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleLogin = async (values: LoginFormData) => {
     setLoading(true);
     setErrorMessage("");
@@ -56,33 +110,48 @@ export default function LoginPage() {
       });
 
       console.log("Login response:", result);
-      
-      if (result.success && result.statusCode === 200) {
-        // Save token and userDetails to localStorage
-        if (result.data?.token) {
-          localStorage.setItem("authToken", result.data.token);
-          console.log("Token saved to localStorage");
-        }
-        if (result.data?.userDetails) {
-          localStorage.setItem("userDetails", JSON.stringify(result.data.userDetails));
-          console.log("UserDetails saved to localStorage");
+
+      if (result.success && result.data?.token) {
+        if (typeof window !== "undefined") {
+          try {
+            // Store both token and user details
+            localStorage.setItem("authToken", result.data.token);
+            localStorage.setItem(
+              "userDetails",
+              JSON.stringify(result.data.userDetails)
+            );
+
+            console.log("✅ Token & UserDetails saved to localStorage");
+            console.log("authToken:", localStorage.getItem("authToken"));
+            console.log("userDetails:", localStorage.getItem("userDetails"));
+          } catch (e) {
+            console.error("❌ Error saving to localStorage:", e);
+          }
         }
 
-        message.success(result.message || "Login successful!");
-        
-        // Use window.location.href for more reliable redirect
+        // message.success(result.message || "Login successful!");
+
+        // Redirect after short delay
         setTimeout(() => {
-          console.log("Redirecting to dashboard...");
-          window.location.href = "/dashboard";
+          if (typeof window !== "undefined") {
+            const token = localStorage.getItem("authToken");
+            if (token) {
+              router.push("/dashboard");
+            } else {
+              message.error("Token not found — please login again.");
+            }
+          }
         }, 500);
       } else {
-        const errorMsg = result.message || "Login failed. Please check your credentials.";
+        const errorMsg =
+          result.message || "Login failed. Please check your credentials.";
         setErrorMessage(errorMsg);
         message.error(errorMsg);
       }
     } catch (error) {
       console.error("Login error:", error);
-      const errorMsg = "Network error. Please check your connection and try again.";
+      const errorMsg =
+        "Network error. Please check your connection and try again.";
       setErrorMessage(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -95,7 +164,9 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <Card className="shadow-lg">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Sign in to your account</h2>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Sign in to your account
+            </h2>
             <p className="mt-2 text-sm text-gray-600">
               Enter your email and password to access the dashboard
             </p>
@@ -168,7 +239,10 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a
+                href="#"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
                 Contact administrator
               </a>
             </p>
@@ -178,15 +252,29 @@ export default function LoginPage() {
           <div className="mt-4 p-4 bg-gray-100 rounded-lg">
             <h3 className="text-sm font-medium mb-2">Debug Info:</h3>
             <div className="text-xs space-y-1">
-              <div>Token: {typeof window !== 'undefined' ? (localStorage.getItem("authToken") ? "✓" : "✗") : "N/A"}</div>
-              <div>UserDetails: {typeof window !== 'undefined' ? (localStorage.getItem("userDetails") ? "✓" : "✗") : "N/A"}</div>
+              <div>
+                Token:{" "}
+                {typeof window !== "undefined"
+                  ? localStorage.getItem("authToken")
+                    ? "✓"
+                    : "✗"
+                  : "N/A"}
+              </div>
+              <div>
+                UserDetails:{" "}
+                {typeof window !== "undefined"
+                  ? localStorage.getItem("userDetails")
+                    ? "✓"
+                    : "✗"
+                  : "N/A"}
+              </div>
             </div>
-            <Button 
-              size="small" 
+            <Button
+              size="small"
               onClick={() => {
                 console.log("Current localStorage:", {
                   token: localStorage.getItem("authToken"),
-                  userDetails: localStorage.getItem("userDetails")
+                  userDetails: localStorage.getItem("userDetails"),
                 });
                 window.location.href = "/dashboard";
               }}
