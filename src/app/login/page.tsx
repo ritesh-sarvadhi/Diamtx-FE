@@ -1,201 +1,202 @@
 "use client";
- 
-import { useAuth } from "@/contexts/AuthContext";
-import { useLocationManager } from "@/utils/locationManager";
-import {
-  EyeInvisibleOutlined,
-  EyeTwoTone,
-  LockOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { App, Button, Card, Checkbox, Form, Input, Space, Spin } from "antd";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
- 
-const { useApp } = App;
- 
+
+import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, UserOutlined } from "@ant-design/icons";
+import { Button, Card, Form, Input, message } from "antd";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import ApiService from "@/services/ApiService";
+
 interface LoginFormData {
-  email: string;
+  name: string;
   password: string;
-  remember: boolean;
 }
- 
-function LoginFormContent() {
+
+interface LoginResponse {
+  success: boolean;
+  statusCode: number;
+  data?: {
+    token?: string;
+    userDetails?: {
+      id: string;
+      email: string;
+      name: string;
+      phone: string | null;
+      roleId: string;
+      status: boolean;
+      loginType: string;
+      isEmployee: boolean;
+      location: string[];
+      canPriceUpdate: boolean;
+      isSales: boolean;
+      refId: string;
+      isSuperAdminRS: boolean;
+      Role: {
+        id: string;
+        name: string;
+      };
+    };
+  };
+  message?: string;
+}
+
+export default function LoginPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [loginStatus, setLoginStatus] = useState<{
-    success: boolean;
-    message: string;
-    role?: string;
-  } | null>(null);
-  const { login, isAuthenticated } = useAuth();
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const locationManager = useLocationManager();
-  const redirectPath = searchParams.get("redirect");
-  const { message } = useApp();
- 
-  // Handle login status changes
-  useEffect(() => {
-    locationManager.setCurrentLocation("/login");
- 
-    if (isAuthenticated) {
-      const redirectTo = redirectPath || "/dashboard";
-      router.push(redirectTo);
-    }
-  }, [isAuthenticated, router, redirectPath, locationManager]);
- 
-  // Handle login status messages
-  useEffect(() => {
-    if (loginStatus) {
-      if (loginStatus.success) {
-        message.success(
-          loginStatus.role
-            ? `Logged in as ${loginStatus.role}!`
-            : "Login successful!"
-        );
-      } else if (loginStatus.message) {
-        message.error(loginStatus.message);
+
+  const handleLogin = async (values: LoginFormData) => {
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const result: LoginResponse = await ApiService.login({
+        name: values.name,
+        password: values.password,
+      });
+
+      console.log("Login response:", result);
+      
+      if (result.success && result.statusCode === 200) {
+        // Save token and userDetails to localStorage
+        if (result.data?.token) {
+          localStorage.setItem("authToken", result.data.token);
+          console.log("Token saved to localStorage");
+        }
+        if (result.data?.userDetails) {
+          localStorage.setItem("userDetails", JSON.stringify(result.data.userDetails));
+          console.log("UserDetails saved to localStorage");
+        }
+
+        message.success(result.message || "Login successful!");
+        
+        // Use window.location.href for more reliable redirect
+        setTimeout(() => {
+          console.log("Redirecting to dashboard...");
+          window.location.href = "/dashboard";
+        }, 500);
+      } else {
+        const errorMsg = result.message || "Login failed. Please check your credentials.";
+        setErrorMessage(errorMsg);
+        message.error(errorMsg);
       }
-    }
-  }, [loginStatus, message]);
- 
-  const onSubmit = async (values: LoginFormData) => {
-    setLoading(true);
-    try {
-      const success = await login(values.email, values.password);
-      setLoginStatus({
-        success,
-        message: success ? "" : "Invalid email or password",
-      });
-    } catch (error: any) {
-      console.error("Login error:", error);
-      setLoginStatus({
-        success: false,
-        message:
-          error.response?.data?.message || "Login failed. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
- 
-  // Demo login function
-  const handleDemoLogin = async (role: string) => {
-    setLoading(true);
-    try {
-      const demoCredentials = {
-        admin: { email: "admin@gmail.com", password: "Admin@123" },
-      };
- 
-      const credentials = demoCredentials[role as keyof typeof demoCredentials];
-      const success = await login(credentials.email, credentials.password);
-      setLoginStatus({
-        success,
-        message: success ? "" : "Invalid credentials",
-        role: success ? role : undefined,
-      });
     } catch (error) {
       console.error("Login error:", error);
-      setLoginStatus({
-        success: false,
-        message: "Demo login failed. Please try again.",
-      });
+      const errorMsg = "Network error. Please check your connection and try again.";
+      setErrorMessage(errorMsg);
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
- 
+
   return (
-<div className="min-h-screen flex items-center justify-center bg-gray-50">
-<Card className="w-full max-w-md" title="Login to Admin Panel">
-<Form
-          form={form}
-          onFinish={onSubmit}
-          layout="vertical"
-          requiredMark={false}
->
-<Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: "Please enter a valid email!" },
-            ]}
->
-<Input
-              prefix={<UserOutlined />}
-              placeholder="Enter your email"
-              size="large"
-              autoComplete="username"
-            />
-</Form.Item>
- 
-          <Form.Item
-            name="password"
-            label="Password"
-            rules={[
-              { required: true, message: "Please input your password!" },
-              { min: 6, message: "Password must be at least 6 characters!" },
-            ]}
->
-<Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Enter your password"
-              size="large"
-              autoComplete="current-password"
-              iconRender={(visible) =>
-                visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-              }
-            />
-</Form.Item>
- 
-          <Form.Item name="remember" valuePropName="checked">
-<Checkbox>Remember me</Checkbox>
-</Form.Item>
- 
-          <Form.Item>
-<Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              size="large"
-              block
->
-              Login
-</Button>
-</Form.Item>
-</Form>
- 
-        <Space direction="vertical" className="w-full">
-<Button
-            block
-            onClick={() => handleDemoLogin("admin")}
-            loading={loading}
->
-            Login as Admin
-</Button>
-</Space>
-</Card>
-</div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <Card className="shadow-lg">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">Sign in to your account</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Enter your email and password to access the dashboard
+            </p>
+          </div>
+
+          <Form
+            form={form}
+            onFinish={handleLogin}
+            layout="vertical"
+            requiredMark={false}
+            className="space-y-6"
+          >
+            <Form.Item
+              name="name"
+              label="Name"
+              rules={[
+                { required: true, message: "Please input your name!" },
+                // { type: "email", message: "Please enter a valid email address!" },
+              ]}
+            >
+              <Input
+                prefix={<UserOutlined className="text-gray-400" />}
+                placeholder="Enter your name"
+                size="large"
+                autoComplete="username"
+                className="rounded-lg"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[
+                { required: true, message: "Please input your password!" },
+                // { min: 6, message: "Password must be at least 6 characters!" },
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined className="text-gray-400" />}
+                placeholder="Enter your password"
+                size="large"
+                autoComplete="current-password"
+                className="rounded-lg"
+                iconRender={(visible) =>
+                  visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                }
+              />
+            </Form.Item>
+
+            {errorMessage && (
+              <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-200">
+                {errorMessage}
+              </div>
+            )}
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                size="large"
+                block
+                className="h-12 text-lg font-semibold rounded-lg"
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </Form.Item>
+          </Form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                Contact administrator
+              </a>
+            </p>
+          </div>
+
+          {/* Debug section - remove in production */}
+          <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+            <h3 className="text-sm font-medium mb-2">Debug Info:</h3>
+            <div className="text-xs space-y-1">
+              <div>Token: {typeof window !== 'undefined' ? (localStorage.getItem("authToken") ? "✓" : "✗") : "N/A"}</div>
+              <div>UserDetails: {typeof window !== 'undefined' ? (localStorage.getItem("userDetails") ? "✓" : "✗") : "N/A"}</div>
+            </div>
+            <Button 
+              size="small" 
+              onClick={() => {
+                console.log("Current localStorage:", {
+                  token: localStorage.getItem("authToken"),
+                  userDetails: localStorage.getItem("userDetails")
+                });
+                window.location.href = "/dashboard";
+              }}
+              className="mt-2"
+            >
+              Test Dashboard Redirect
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </div>
   );
-}
- 
-// Wrapper component to handle Suspense
-function LoginForm() {
-  return (
-<Suspense
-      fallback={
-<div className="min-h-screen flex items-center justify-center">
-<Spin size="large" />
-</div>
-      }
->
-<LoginFormContent />
-</Suspense>
-  );
-}
- 
-export default function LoginPage() {
-  return <LoginForm />;
 }
