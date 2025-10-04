@@ -17,9 +17,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       const token = localStorage.getItem("authToken");
       const userDetails = localStorage.getItem("userDetails");
 
-      console.log("ProtectedRoute - Token:", token ? "exists" : "missing");
-      console.log("ProtectedRoute - UserDetails:", userDetails ? "exists" : "missing");
-
       if (!token || !userDetails) {
         console.log("ProtectedRoute - Missing auth data, redirecting to login");
         // Use window.location.href for more reliable redirect
@@ -27,7 +24,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         return;
       }
 
-      console.log("ProtectedRoute - Authentication successful, rendering protected content");
       setIsAuthenticated(true);
       setIsLoading(false);
     };
